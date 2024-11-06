@@ -1,4 +1,4 @@
-import re ahahha
+import re
 
 # Dictionary voor patronen.
 patterns = { 
