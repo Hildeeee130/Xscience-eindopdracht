@@ -1,4 +1,6 @@
 import re
+import time
+import random 
 
 # Dictionary voor patronen.
 patterns = { 
@@ -31,7 +33,7 @@ def get_response(message):
   # Als het niet is gevonden, dan zegt de bot jou na.
   if message in responses:
     # hint: lees hoofdstuk 2.2 en hoofdstuk 3.3
-    return "Hier komt het antwoord van de chatbot uit de responses dictionary"
+    return "Hier komt het antwoord van                   de chatbot uit de responses dictionary"
   else:
     return "I don't understand you."
 
