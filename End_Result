@@ -1,2 +1,199 @@
-import re
+import re 
+import random
 import time
+
+minimum_score = 75
+
+# Dictionary van klachten
+complaints = {
+  "ziek": "Heeft u stress, hoofdpijn, koorts? Bent u moe?.",
+  "koorts": "Koorts kan een teken zijn van infectie. Zorg voor voldoende rust en blijf gehydrateerd. Overweeg een arts te raadplegen als de koorts aanhoudt.",
+  "hoofdpijn": "Heeft u last van hoofdpijn? Zorg ervoor dat u voldoende water drinkt en rust neemt. Vermijd fel licht. Neem contact op met een arts als het aanhoudt.",
+  "honger": "Gelukkig bent u niet ziek, neemt u maar een boterham, dan voelt u zich snel beter. Neem contact op met een arts als het aanhoudt.",
+  "moe": "Vermoeidheid kan door veel factoren komen. Zorg voor een goede nachtrust, een uitgebalanceerd dieet, en vermijd overmatig cafeïnegebruik.",
+  "vermoeid": "Vermoeidheid kan door veel factoren komen. Zorg voor een goede nachtrust, een uitgebalanceerd dieet, en overweeg medische hulp als het blijft aanhouden.",
+  "stress": "Stress kan schadelijk zijn voor de gezondheid. Probeer ontspanningsoefeningen, zoals ademhalingstechnieken, meditatie, of beweging.",
+  "keelpijn": "Keelpijn kan worden veroorzaakt door een infectie of irritatie. Drink warme dranken, gebruik honing en rust je stem. Raadpleeg een arts als het aanhoudt.",
+  "verkouden": "Bij een verkoudheid is rust belangrijk. Blijf gehydrateerd en gebruik eventueel neusspray. Raadpleeg een arts bij verergering of langdurige klachten.",
+  "buikpijn": "Buikpijn kan door meerdere oorzaken komen. Vermijd zwaar voedsel en probeer te ontspannen. Raadpleeg een arts als het aanhoudt of ernstig is.",
+  "misselijk": "Bij misselijkheid kan gemberthee of een lichte maaltijd helpen. Vermijd vet of gekruid voedsel. Neem contact op met een arts als het aanhoudt.",
+  "duizelig": "Duizeligheid kan komen door uitdroging of een lage bloedsuikerspiegel. Drink water en eet iets kleins. Raadpleeg een arts bij aanhoudende klachten.",
+  "spierpijn": "Spierpijn kan worden verlicht door lichte beweging, stretchen, en warmte. Rust voldoende. Overweeg een arts te raadplegen als het ernstig is.",
+  "kortademig": "Bij kortademigheid kan rust en controle over je ademhaling helpen. Raadpleeg direct een arts bij ernstige klachten.",
+  "oorsuizen": "Oorsuizen kan door stress of een gehoorprobleem komen. Vermijd lawaai en zoek een rustige omgeving. Raadpleeg een specialist als het blijft aanhouden.",
+  "rugpijn": "Rugpijn kan verbeteren door goede houding, lichte beweging, en warmte. Raadpleeg een arts bij ernstige of langdurige klachten.",
+  "wazig zien": "Wazig zien kan komen door vermoeidheid, uitdroging of een probleem met de ogen. Zorg voor voldoende verlichting en rust je ogen. Raadpleeg een oogarts als het aanhoudt.",
+  "benauwdheid": "Benauwdheid kan veroorzaakt worden door stress, astma of andere ademhalingsproblemen. Probeer te ontspannen en zoek medische hulp als het niet verbetert.",
+  "overgeven": "Overgeven kan komen door een maagprobleem. Blijf gehydrateerd met kleine slokjes water en vermijd zwaar voedsel. Raadpleeg een arts als het aanhoudt.",
+  "huiduitslag": "Huiduitslag kan wijzen op een allergische reactie of irritatie. Vermijd het contact met mogelijke triggers en gebruik een kalmerende crème. Neem contact op met een arts bij verergering.",
+  "verwardheid": "Verwardheid kan door uitdroging, stress of medische aandoeningen komen. Zorg voor rust, hydratatie en zoek direct medische hulp als het ernstig is.",
+  "brandwond": "Spoel de brandwond direct met lauw water en dek deze steriel af. Zoek medische hulp bij ernstige brandwonden.",
+  "verstuiking": "Een verstuiking kan worden behandeld met rust, ijs, compressie en elevatie (RICE-methode). Raadpleeg een arts als het niet verbetert.",
+  "constipatie": "Bij constipatie kan meer vezelrijk voedsel, voldoende water en beweging helpen. Raadpleeg een arts als het probleem aanhoudt.",
+  "diarree": "Bij diarree is het belangrijk om uitdroging te voorkomen. Drink veel water en gebruik ORS. Raadpleeg een arts als het langer dan twee dagen duurt.",
+  "krampen": "Krampen kunnen worden veroorzaakt door overbelasting of uitdroging. Rust, hydratatie en lichte stretches kunnen helpen.",
+  "tintelingen": "Tintelingen kunnen wijzen op zenuwproblemen of een slechte doorbloeding. Beweeg voorzichtig en raadpleeg een arts als het aanhoudt."
+}
+
+# Dictionary of pains
+pains = {
+  "pijn": "Pijn kan een signaal zijn van een blessure, overbelasting of een aandoening. Rust, ijs, en warmte kunnen helpen. Raadpleeg een arts als de pijn hevig of aanhoudend is.",
+  "buikpijn": "Buikpijn kan door meerdere oorzaken komen, zoals spijsverteringsproblemen of stress. Vermijd zwaar voedsel en blijf gehydrateerd. Raadpleeg een arts als het aanhoudt.",
+  "spierpijn": "Spierpijn kan ontstaan door inspanning of stress. Rust, warmte en lichte stretches kunnen verlichting bieden. Raadpleeg een arts bij hevige of aanhoudende klachten.",
+  "gewrichtspijn": "Gewrichtspijn kan te maken hebben met overbelasting, artrose of ontsteking. Vermijd zware belasting, probeer een ontstekingsremmende crème, en raadpleeg een arts als het niet verbetert.",
+  "hoofdpijn": "Hoofdpijn kan spanningsgerelateerd of door uitdroging komen. Drink voldoende water, vermijd stress en rust uit. Neem contact op met een arts als het aanhoudt.",
+  "rugpijn": "Rugpijn kan door een verkeerde houding of overbelasting komen. Zorg voor een goede zithouding, lichte beweging en warmte. Raadpleeg een arts bij langdurige pijn.",
+  "nekpijn": "Nekpijn kan worden veroorzaakt door spanning, een verkeerde houding of overbelasting. Stretch voorzichtig, gebruik warmte en rust. Raadpleeg een arts als de pijn aanhoudt.",
+  "pijn op de borst": "Pijn op de borst kan een teken zijn van stress, spierproblemen of een ernstiger aandoening. Raadpleeg direct medische hulp als het gepaard gaat met kortademigheid of duizeligheid.",
+  "oorpijn": "Oorpijn kan veroorzaakt worden door een infectie of drukveranderingen. Gebruik warmte aan de buitenkant van het oor en raadpleeg een arts bij aanhoudende klachten.",
+  "tandpijn": "Tandpijn kan wijzen op gaatjes of een ontsteking. Spoel de mond met warm zout water en raadpleeg een tandarts voor verdere behandeling.",
+  "brandende pijn": "Brandende pijn kan wijzen op zenuwschade of irritatie. Vermijd druk op het gebied en zoek medische hulp bij aanhoudende klachten.",
+  "chronische pijn": "Chronische pijn kan een teken zijn van een onderliggende aandoening. Probeer ontspanningstechnieken en raadpleeg een specialist voor pijnmanagement."
+}
+
+# De patronen om te zien of iemand vertelt wat er aan de hand is.
+patterns = { 
+   "ik heb pijn aan mijn (.*)":"Waarom heb je pijn aan je {}?", 
+   "ik voel me (.*)":"Waarom voel je je {}?",
+   "ik ben (.*)":"Waarom ben je {}?",
+   "ik heb (.*)":"Heb je {}?",
+   "ik heb last van (.*)":"Heb je last van je {}?"
+}
+
+# Standaard antwoorden op andere opmerkingen dan gezondheidsvragen
+responses = {
+  "Hallo": ["Goedendag, wat kan ik voor u doen?", "Hallo, kan ik iets voor u betekenen?"],
+  "Mag ik wat vragen?": ["Jazeker, daar ben ik voor!", "Vraagt u maar, ik hoop u te kunnen antwoorden"]
+}
+
+# Voorbeelden om uit te proberen
+
+# ik ben ziek
+# ik heb last van wazig zien
+# ik heb hoofdpijn
+# ik heb geen vragen meer
+# Ik heb diarree
+
+
+
+
+# Dit is de functie die kijkt of de kwaal in de Dicionary voor komt
+def compare_to_key(text, key):
+  segments = 0
+  contained = 0
+  for i in range(0,len(key)):
+    for j in range(i, len(key)):
+      segments+=1
+      #print(key[i:j+1])
+      if key[i:j+1] in text:
+        contained+=1
+  return 100 * contained / segments
+
+# Dit is de functie voor de Chatbot
+def gezondheidschatbot():
+  
+  # De introtekst
+  print("Welkom bij de gezondheidschatbot!")
+  print("Voelt u zich ziek, heeft u koorts of stress, bent u moe, heeft u hoofdpijn of gewoon honger, dan kunt u bij mij terecht.\n")
+  print("U kunt 'Ik heb geen vragen meer' of 'Nee, bedankt' typen om het gesprek te stoppen.\n")
+    
+  # Dit is de lus waarin de vragen worden gesteld en antwoorden worden gegeven.
+  while True:
+    
+    # Hiermee kan je jouw vraag invullen, alle input wordt omgezet naar kleine letters
+    message = input("U: ").lower()
+  
+    # Dit statement zorgt ervoor dat je kan stoppen
+    if message == "ik heb geen vragen meer" :
+      print("Gezondheidschatbot: Bedankt voor het gebruik van de chatbot. Zorg goed voor jezelf!")
+      break
+
+    # Haal het antwoord van de Chatbot op 
+    # \n\n betekent dat er twee nieuwe regels aan worden gemaakt
+    response = get_response(message) + "\n\nHeeft u verder nog vragen?"
+
+    time.sleep(random.randint(1,2))
+
+    # Laat het antwoord van de Chatbot zien
+    print("Gezondheidschatbot: " + response);
+
+# Deze functie kijk samen met de functie compare_to_key() welke sleutelwaarde het beste overeenkomt met de complaints
+def get_complaint(message):
+ 
+ best_match = ""
+ best_score = 0
+ 
+ # Loop door alle klachten
+ for c in complaints: 
+  
+  # Hier wordt de score van de sleutel waarde opgehaald
+  score = compare_to_key(message, c)
+  
+  #print(c, str(round(score)) + "%")
+  
+  # Als de score hoger is dan de vorige hoogste score
+  if score > best_score:
+    
+    # vervang de best_score met de huidige score
+    best_score = score
+    
+    # Vervang de omschrijving met de beste omschrijving
+    best_match = c
+  
+  # Als de best_score hoger is dan het minimale match percentage
+  if best_score > minimum_score:
+    
+    # Geef op basis van de juiste sleutelwaarde de juiste omschrijving terug
+    return complaints[best_match]
+
+# Dit is de functie die het de vraag en antwoord behandelt
+def get_response(message):
+
+
+  # Deze for loop zorgt er voor dat de juiste woorden uit de vraag worden gehaald om het juiste antwoord te kunnen geven. 
+   for pattern in patterns: 
+
+     match = re.search(pattern,message)
+     if match:
+    
+  #   print pattern
+  #   print message
+
+      best_match = get_complaint(message)
+    #   if best_match != "":
+      return best_match;    
+    
+  #   match = re.search(pattern,message)
+  #   print match;
+    
+  #   if match:
+  #     return "Nope";
+  #   else:
+  #     return "Yes!"
+
+  #   # Hier kijk je of het patroon in de message zit
+
+    
+    # else:
+      
+
+      #   else:
+      #     print("BOT: I don't understand what it means to feel " +  gevoel)
+      # else: 
+      #     print("BOT: I don't understand")
+    
+      # Optie als de chatbot je niet begrijpt
+      # else:
+      
+      #   # Met deze functie kijk je of vraag/opmerking bij de standaard antwoorden staat
+      #   if message in responses:
+        
+      #     # Met dit statement pakt de chatbot random antwoorden, die bij de vraag horen.
+      #     return random.choice(responses[message])
+        
+  # else:
+    
+    #  return "Sorry, ik ben nog aan het leren en begrijp uw vraag mogelijk niet volledig. Overweeg contact op te nemen met een zorgprofessional."
+
+# Start de chatbot
+gezondheidschatbot()
