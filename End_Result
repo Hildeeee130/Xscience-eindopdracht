@@ -2,11 +2,13 @@ import re
 import random
 import time
 
-minimum_score = 75
+# Dit bepaalt de hoeveel het woord op de klacht moet lijken. 
+# lagere waarde betekent minder overeenkomsten nodig, maar meer resultaten.
+minimum_score = 50
 
 # Dictionary van klachten
 complaints = {
-  "ziek": "Heeft u stress, hoofdpijn, koorts? Bent u moe?.",
+  "ziek": "Heeft u stress, hoofdpijn, koorts? Bent u moe? Ik kan advies geven over de volgende zaken: koorts, hoofdpijn, honger,moe, vermoeid, stress, keelpijn, verkouden, buikpijn, misselijk ,duizelig ,spierpijn  kortademig ,oorsuizen ,rugpijn ,wazig zien ,benauwdheid ,overgeven ,huiduitslag ,verwardheid ,brandwond ,verstuiking ,constipatie ,diarree ,krampen ,tintelingen ,pijn ,buikpijn ,spierpijn ,gewrichtspijn ,hoofdpijn ,rugpijn ,nekpijn ,pijn op de borst,oorpijn ,tandpijn ,brandende pijn ,chronische pijn",
   "koorts": "Koorts kan een teken zijn van infectie. Zorg voor voldoende rust en blijf gehydrateerd. Overweeg een arts te raadplegen als de koorts aanhoudt.",
   "hoofdpijn": "Heeft u last van hoofdpijn? Zorg ervoor dat u voldoende water drinkt en rust neemt. Vermijd fel licht. Neem contact op met een arts als het aanhoudt.",
   "honger": "Gelukkig bent u niet ziek, neemt u maar een boterham, dan voelt u zich snel beter. Neem contact op met een arts als het aanhoudt.",
@@ -32,16 +34,12 @@ complaints = {
   "constipatie": "Bij constipatie kan meer vezelrijk voedsel, voldoende water en beweging helpen. Raadpleeg een arts als het probleem aanhoudt.",
   "diarree": "Bij diarree is het belangrijk om uitdroging te voorkomen. Drink veel water en gebruik ORS. Raadpleeg een arts als het langer dan twee dagen duurt.",
   "krampen": "Krampen kunnen worden veroorzaakt door overbelasting of uitdroging. Rust, hydratatie en lichte stretches kunnen helpen.",
-  "tintelingen": "Tintelingen kunnen wijzen op zenuwproblemen of een slechte doorbloeding. Beweeg voorzichtig en raadpleeg een arts als het aanhoudt."
-}
-
-# Dictionary of pains
-pains = {
+  "tintelingen": "Tintelingen kunnen wijzen op zenuwproblemen of een slechte doorbloeding. Beweeg voorzichtig en raadpleeg een arts als het aanhoudt.",
   "pijn": "Pijn kan een signaal zijn van een blessure, overbelasting of een aandoening. Rust, ijs, en warmte kunnen helpen. Raadpleeg een arts als de pijn hevig of aanhoudend is.",
   "buikpijn": "Buikpijn kan door meerdere oorzaken komen, zoals spijsverteringsproblemen of stress. Vermijd zwaar voedsel en blijf gehydrateerd. Raadpleeg een arts als het aanhoudt.",
   "spierpijn": "Spierpijn kan ontstaan door inspanning of stress. Rust, warmte en lichte stretches kunnen verlichting bieden. Raadpleeg een arts bij hevige of aanhoudende klachten.",
   "gewrichtspijn": "Gewrichtspijn kan te maken hebben met overbelasting, artrose of ontsteking. Vermijd zware belasting, probeer een ontstekingsremmende crème, en raadpleeg een arts als het niet verbetert.",
-  "hoofdpijn": "Hoofdpijn kan spanningsgerelateerd of door uitdroging komen. Drink voldoende water, vermijd stress en rust uit. Neem contact op met een arts als het aanhoudt.",
+  "hoofdpijn": "Hoofdpijn kan spanningsgerelateerd of door uitdroging komen. Drink voldoende water, vermijd stress en rust uit. Vermijd fel licht. Neem contact op met een arts als het aanhoudt.",
   "rugpijn": "Rugpijn kan door een verkeerde houding of overbelasting komen. Zorg voor een goede zithouding, lichte beweging en warmte. Raadpleeg een arts bij langdurige pijn.",
   "nekpijn": "Nekpijn kan worden veroorzaakt door spanning, een verkeerde houding of overbelasting. Stretch voorzichtig, gebruik warmte en rust. Raadpleeg een arts als de pijn aanhoudt.",
   "pijn op de borst": "Pijn op de borst kan een teken zijn van stress, spierproblemen of een ernstiger aandoening. Raadpleeg direct medische hulp als het gepaard gaat met kortademigheid of duizeligheid.",
@@ -62,8 +60,11 @@ patterns = {
 
 # Standaard antwoorden op andere opmerkingen dan gezondheidsvragen
 responses = {
-  "Hallo": ["Goedendag, wat kan ik voor u doen?", "Hallo, kan ik iets voor u betekenen?"],
-  "Mag ik wat vragen?": ["Jazeker, daar ben ik voor!", "Vraagt u maar, ik hoop u te kunnen antwoorden"]
+  "hallo": ["Goedendag, wat kan ik voor u doen?", "Hallo, kan ik iets voor u betekenen?"],
+  "mag ik wat vragen?": ["Jazeker, daar ben ik voor!", "Vraagt u maar, ik hoop u te kunnen antwoorden"],
+  "hoe moet ik beginnen?" : ["Als je wil dat ik advies geeft type dan 'Ik ben ziek'","Begin maar met 'Ik ben zien' dan help ik je verder"],
+  "hoe kan ik stoppen?" : ["Als je wil stoppen, type dan 'Ik heb geen vragen meer'"],
+  "weet je dat zeker?" : ["Ik ben een Chatbot, die antwoord geeft op basis van mijn gegevens. Dus dat moet je aan de ontwikkelaar vragen ;-)"]
 }
 
 # Voorbeelden om uit te proberen
@@ -74,62 +75,38 @@ responses = {
 # ik heb geen vragen meer
 # Ik heb diarree
 
-
-
-
-# Dit is de functie die kijkt of de kwaal in de Dicionary voor komt
+# Dit is de functie die kijkt of de sleutel waarde in de Dictionary voor komt
 def compare_to_key(text, key):
+
   segments = 0
   contained = 0
+
   for i in range(0,len(key)):
+    
     for j in range(i, len(key)):
+    
       segments+=1
-      #print(key[i:j+1])
+    
       if key[i:j+1] in text:
         contained+=1
+
   return 100 * contained / segments
 
-# Dit is de functie voor de Chatbot
-def gezondheidschatbot():
-  
-  # De introtekst
-  print("Welkom bij de gezondheidschatbot!")
-  print("Voelt u zich ziek, heeft u koorts of stress, bent u moe, heeft u hoofdpijn of gewoon honger, dan kunt u bij mij terecht.\n")
-  print("U kunt 'Ik heb geen vragen meer' of 'Nee, bedankt' typen om het gesprek te stoppen.\n")
-    
-  # Dit is de lus waarin de vragen worden gesteld en antwoorden worden gegeven.
-  while True:
-    
-    # Hiermee kan je jouw vraag invullen, alle input wordt omgezet naar kleine letters
-    message = input("U: ").lower()
-  
-    # Dit statement zorgt ervoor dat je kan stoppen
-    if message == "ik heb geen vragen meer" :
-      print("Gezondheidschatbot: Bedankt voor het gebruik van de chatbot. Zorg goed voor jezelf!")
-      break
-
-    # Haal het antwoord van de Chatbot op 
-    # \n\n betekent dat er twee nieuwe regels aan worden gemaakt
-    response = get_response(message) + "\n\nHeeft u verder nog vragen?"
-
-    time.sleep(random.randint(1,2))
-
-    # Laat het antwoord van de Chatbot zien
-    print("Gezondheidschatbot: " + response);
 
 # Deze functie kijk samen met de functie compare_to_key() welke sleutelwaarde het beste overeenkomt met de complaints
-def get_complaint(message):
- 
+def get_value_from_dictionary(Dictionary, Message):
+
+ # Hier worden de lege variabelen gezet
  best_match = ""
  best_score = 0
  
  # Loop door alle klachten
- for c in complaints: 
+ for c in Dictionary: 
   
   # Hier wordt de score van de sleutel waarde opgehaald
-  score = compare_to_key(message, c)
+  score = compare_to_key(Message, c)
   
-  #print(c, str(round(score)) + "%")
+  # print(c, str(round(score)) + "%")
   
   # Als de score hoger is dan de vorige hoogste score
   if score > best_score:
@@ -142,58 +119,73 @@ def get_complaint(message):
   
   # Als de best_score hoger is dan het minimale match percentage
   if best_score > minimum_score:
-    
+
     # Geef op basis van de juiste sleutelwaarde de juiste omschrijving terug
-    return complaints[best_match]
+    return best_match
+    
 
 # Dit is de functie die het de vraag en antwoord behandelt
-def get_response(message):
-
+def get_answer(message):
 
   # Deze for loop zorgt er voor dat de juiste woorden uit de vraag worden gehaald om het juiste antwoord te kunnen geven. 
-   for pattern in patterns: 
+  for pattern in patterns: 
 
      match = re.search(pattern,message)
      if match:
-    
-  #   print pattern
-  #   print message
 
-      best_match = get_complaint(message)
-    #   if best_match != "":
+      # Kijk of de klacht in de Dictionary staat
+      best_match = get_value_from_dictionary(complaints,message)
+      
       return best_match;    
-    
-  #   match = re.search(pattern,message)
-  #   print match;
-    
-  #   if match:
-  #     return "Nope";
-  #   else:
-  #     return "Yes!"
 
-  #   # Hier kijk je of het patroon in de message zit
+def get_response(message): 
 
-    
-    # else:
+  if message in responses: 
+  
+      # Kijk of de klacht in de Dictionary staat
+      best_match = get_value_from_dictionary(responses,message)
       
+      # Kies random een van de antwoorden in de Array en geef die terug
+      return random.choice(responses[best_match]);  # voorbeeld: responses["weet je dat zeker"]
+  
+  else: 
+      return "Sorry, ik ben nog aan het leren en begrijp uw vraag mogelijk niet volledig. Probeer het nog eens of overweeg contact op te nemen met een zorgprofessional.";
+  
+  
+# Dit is de functie voor de Chatbot
+def gezondheidschatbot():
+  
+  # De introtekst
+  print("Welkom bij de GezondheidsChatbot!")
+  print("Voelt u zich ziek, heeft u koorts of stress, bent u moe, heeft u hoofdpijn of gewoon honger, dan kunt u bij mij terecht.\n")
+  print("U kunt 'Ik heb geen vragen meer' typen om het gesprek te stoppen.")
+  print("Wilt u advies over hoe ik u kan helpen? Typ dan 'Ik ben ziek'\n")
+    
+  # Dit is de lus waarin de vragen worden gesteld en antwoorden worden gegeven.
+  while True:
+    
+    # Hiermee kan je jouw vraag invullen, alle input wordt omgezet naar kleine letters
+    message = input("U: ").lower()
+    
+    # Vul standaard waarde in.
+    response = "Sorry, ik ben nog aan het leren en begrijp uw vraag mogelijk niet volledig. Probeer het nog eens of overweeg contact op te nemen met een zorgprofessional."; 
+  
+    # Dit statement zorgt ervoor dat je kan stoppen
+    if message == "ik heb geen vragen meer" :
+      print("Gezondheidschatbot: Bedankt voor het gebruik van de chatbot. Zorg goed voor jezelf!")
+      break
 
-      #   else:
-      #     print("BOT: I don't understand what it means to feel " +  gevoel)
-      # else: 
-      #     print("BOT: I don't understand")
-    
-      # Optie als de chatbot je niet begrijpt
-      # else:
-      
-      #   # Met deze functie kijk je of vraag/opmerking bij de standaard antwoorden staat
-      #   if message in responses:
-        
-      #     # Met dit statement pakt de chatbot random antwoorden, die bij de vraag horen.
-      #     return random.choice(responses[message])
-        
-  # else:
-    
-    #  return "Sorry, ik ben nog aan het leren en begrijp uw vraag mogelijk niet volledig. Overweeg contact op te nemen met een zorgprofessional."
+    # Haal het antwoord van de Chatbot op 
+    # \n\n betekent dat er twee nieuwe regels aan worden gemaakt
+    if(str(get_answer(message)) != "None") :
+      response = complaints[get_answer(message)] + "\n\nHeeft u verder nog vragen?" # complaints["ziek"]
+    else:  
+      response = get_response(message)
+         
+    # time.sleep(random.randint(1,1))
+
+    # Laat het antwoord van de Chatbot zien
+    print("Gezondheidschatbot: " + str(response));
 
 # Start de chatbot
 gezondheidschatbot()
